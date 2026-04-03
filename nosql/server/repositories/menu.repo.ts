@@ -17,7 +17,7 @@ export async function createMenusRepo({
 }
 
 /*
-export async function updateMenuRepo():Promise<Menu|null>{
+export async function updateMenuRepo({...}:UpdateMenu):Promise<Menu|null>{
 }
 */
 

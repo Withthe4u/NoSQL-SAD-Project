@@ -19,6 +19,6 @@ export async function createOrderRepo({
 }
 
 /*
-export async function updateOrderStatusRepo({...}:UpdateOrderStatus):Promise<Menu>{
+export async function updateOrderStatusRepo({...}:UpdateOrderStatus):Promise<Menu|null>{
 }
 */
