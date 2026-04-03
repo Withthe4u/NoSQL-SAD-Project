@@ -1,0 +1,24 @@
+import { OrderCollection } from "@/db/schema";
+import { CreateOrder, Order } from "../models";
+import connectMongoDB from "@/db";
+
+export async function getActiveOrdersRepo(): Promise<Order[]> {
+  await connectMongoDB();
+  return OrderCollection.find({});
+  // This is incorrect.
+  //We have to GET ALL ORDERS WHERE STATUS==="PENDING" SORT BY DATE ASC
+}
+
+export async function createOrderRepo({
+  customerName,
+  items,
+  totalPrice,
+}: CreateOrder): Promise<Order> {
+  await connectMongoDB();
+  return OrderCollection.insertOne({ customerName, items, totalPrice });
+}
+
+/*
+export async function updateOrderStatusRepo({...}:UpdateOrderStatus):Promise<Menu>{
+}
+*/
