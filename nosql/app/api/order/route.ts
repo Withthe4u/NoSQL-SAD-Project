@@ -10,10 +10,13 @@ export async function GET() {
   try {
     const orders = await getActiveOrdersRepo();
     return NextResponse.json(orders, { status: 200 });
-  } catch (error) {
+  } catch (error : any) {
+    console.log(error.issues);
+    console.log(error.messages);
     return NextResponse.json(error, { status: 400 });
   }
 }
+
 
 const APICreateOrderSchema = CreateOrderSchema.omit({ totalPrice: true });
 export async function POST(req: NextRequest) {
