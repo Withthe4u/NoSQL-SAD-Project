@@ -1,5 +1,5 @@
 import { MenuCollection } from "@/db/schema";
-import { CreateMenu, Menu } from "../models";
+import { CreateMenu, Menu, UpdateMenu } from "../models";
 import connectMongoDB from "@/db";
 
 export async function getAllMenusRepo(): Promise<Menu[]> {
@@ -16,10 +16,17 @@ export async function createMenusRepo({
   return MenuCollection.insertMany(menus);
 }
 
-/*
-export async function updateMenuRepo({...}:UpdateMenu):Promise<Menu|null>{
+
+export async function updateMenuRepo({
+  id,
+  name,
+  price,
+}:UpdateMenu):Promise<Menu|null>{
+  await connectMongoDB();
+  return MenuCollection.findByIdAndUpdate(id,{ name, price });
 }
-*/
+
+
 
 export async function deleteMenuRepo({
   id,
