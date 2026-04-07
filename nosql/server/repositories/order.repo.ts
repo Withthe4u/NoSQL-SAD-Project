@@ -1,6 +1,6 @@
-import { OrderCollection } from "@/db/schema";
-import { CreateOrder, Order } from "../models";
-import connectMongoDB from "@/db";
+  import { OrderCollection } from "@/db/schema";
+  import { CreateOrder, Order } from "../models";
+  import connectMongoDB from "@/db";
 
 
 export async function getActiveOrdersRepo(): Promise<Order[]> {
@@ -16,16 +16,35 @@ export async function getActiveOrdersRepo(): Promise<Order[]> {
   //We have to GET ALL ORDERS WHERE STATUS==="PENDING" SORT BY DATE ASC
 }
 
-export async function createOrderRepo({
-  customerName,
-  items,
-  totalPrice,
-}: CreateOrder): Promise<Order> {
-  await connectMongoDB();
-  return OrderCollection.insertOne({ customerName, items, totalPrice });
-}
 
-/*
-export async function updateOrderStatusRepo({...}:UpdateOrderStatus):Promise<Menu|null>{
+  export async function getActiveOrdersRepo(): Promise<Order[]> {
+    await connectMongoDB();
+    return OrderCollection.find({});
+    // This is incorrect.
+    //We have to GET ALL ORDERS WHERE STATUS==="PENDING" SORT BY DATE ASC
+  }
+
+  export async function createOrderRepo({
+    customerName,
+    items,
+    totalPrice,
+  }: CreateOrder): Promise<Order> {
+    await connectMongoDB();
+    return OrderCollection.insertOne({ customerName, items, totalPrice });
+  }
+
+  export async function updateOrderStatusRepo({
+  orderId,
+  status,
+}: {
+  orderId: string;
+  status: "Pending" | "Completed";
+}): Promise<Order | null> {
+  await connectMongoDB();
+
+  const updateData: any = { status };
+
+  return OrderCollection.findByIdAndUpdate(orderId, updateData, {
+    new: true,
+  });
 }
-*/
