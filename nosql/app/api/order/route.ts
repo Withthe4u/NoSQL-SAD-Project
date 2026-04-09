@@ -9,14 +9,14 @@ import { NextRequest, NextResponse } from "next/server";
 export async function GET() {
   try {
     const orders = await getActiveOrdersRepo();
+    console.log(orders);
     return NextResponse.json(orders, { status: 200 });
-  } catch (error : any) {
+  } catch (error: any) {
     console.log(error.issues);
     console.log(error.messages);
     return NextResponse.json(error, { status: 400 });
   }
 }
-
 
 const APICreateOrderSchema = CreateOrderSchema.omit({ totalPrice: true });
 export async function POST(req: NextRequest) {

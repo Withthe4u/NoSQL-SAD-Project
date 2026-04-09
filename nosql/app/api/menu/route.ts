@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from "next/server";
 export async function GET() {
   try {
     const menus = await getAllMenusRepo();
+    console.log(menus);
     return NextResponse.json(menus, { status: 200 });
   } catch (error) {
     return handleError(error);
