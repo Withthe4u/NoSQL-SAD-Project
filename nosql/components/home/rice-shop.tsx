@@ -105,16 +105,6 @@ export function RiceShop({ initialMenus, initialOrders }: Props) {
     );
   };
 
-  const cancelOrder = async (order: any) => {
-    const id = getId(order);
-    if (!id) return;
-
-    await fetch(`/api/order/${id}`, {
-      method: "DELETE",
-    });
-
-    setOrders((prev) => prev.filter((o) => getId(o) !== id));
-  };
 
   const addMenu = async () => {
   if (!newMenuName || !newMenuPrice) return;
@@ -354,12 +344,7 @@ export function RiceShop({ initialMenus, initialOrders }: Props) {
                         >
                           Complete
                         </button>
-                        <button
-                          onClick={() => cancelOrder(order)}
-                          className="bg-red-500 text-white px-3 py-1 rounded"
-                        >
-                          Cancel
-                        </button>
+                       
                       </td>
                     </tr>
                   );
