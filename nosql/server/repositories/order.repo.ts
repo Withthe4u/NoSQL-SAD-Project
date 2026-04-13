@@ -16,14 +16,6 @@ export async function getActiveOrdersRepo(): Promise<Order[]> {
   //We have to GET ALL ORDERS WHERE STATUS==="PENDING" SORT BY DATE ASC
 }
 
-
-  export async function getActiveOrdersRepo(): Promise<Order[]> {
-    await connectMongoDB();
-    return OrderCollection.find({});
-    // This is incorrect.
-    //We have to GET ALL ORDERS WHERE STATUS==="PENDING" SORT BY DATE ASC
-  }
-
   export async function createOrderRepo({
     customerName,
     items,
