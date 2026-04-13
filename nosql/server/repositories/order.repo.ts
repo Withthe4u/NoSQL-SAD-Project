@@ -5,7 +5,7 @@
 
 export async function getActiveOrdersRepo(): Promise<Order[]> {
 
-    await connectMongoDB();
+  await connectMongoDB();
 
   const orders = await OrderCollection
   .find({ status : "Pending" })

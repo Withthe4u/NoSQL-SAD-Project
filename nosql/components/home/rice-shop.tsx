@@ -28,6 +28,7 @@ export function RiceShop({ initialMenus, initialOrders }: Props) {
 
   const [newMenuName, setNewMenuName] = useState("");
   const [newMenuPrice, setNewMenuPrice] = useState("");
+  const [editingPrice, setEditingPrice] = useState<Record<string, number>>({});
 
   const getId = (obj: any) => obj?.id || obj?._id;
   const getMenuId = (menu: any) => menu?.id || menu?._id;
@@ -105,30 +106,60 @@ export function RiceShop({ initialMenus, initialOrders }: Props) {
     );
   };
 
+  const cancelOrder = async (order: any) => {
+    const id = getId(order);
+    if (!id) return;
+
+    await fetch(`/api/order/${id}`, {
+      method: "DELETE",
+    });
+
+    setOrders((prev) => prev.filter((o) => getId(o) !== id));
+  };
 
   const addMenu = async () => {
-  if (!newMenuName || !newMenuPrice) return;
+    if (!newMenuName || !newMenuPrice) return;
 
-  const res = await fetch("/api/menu", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      menus: [
-        {
-          name: newMenuName,
-          price: parseFloat(newMenuPrice),
-        },
-      ],
-    }),
-  });
+    const res = await fetch("/api/menu", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        menus: [
+          {
+            name: newMenuName,
+            price: Number(newMenuPrice) || 0,
+          },
+        ],
+      }),
+    });
 
-  if (res.ok) {
-    const created = await res.json();
-    setMenus((prev) => [...prev, ...created]);
-    setNewMenuName("");
-    setNewMenuPrice("");
-  }
-};
+    if (res.ok) {
+      const created = await res.json();
+      setMenus((prev) => [...prev, ...created]);
+      setNewMenuName("");
+      setNewMenuPrice("");
+    }
+  };
+
+  const updateMenuPrice = async (menu: any) => {
+    const id = getMenuId(menu);
+    if (!id) return;
+
+    const newPrice = editingPrice[id];
+    if (newPrice == null) return;
+
+    await fetch(`/api/menu/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ price: newPrice }),
+    });
+
+    setMenus((prev) =>
+      prev.map((m) =>
+        getMenuId(m) === id ? { ...m, price: newPrice } : m
+      )
+    );
+  };
 
   const deleteMenu = async (menu: any) => {
     const id = getMenuId(menu);
@@ -139,7 +170,7 @@ export function RiceShop({ initialMenus, initialOrders }: Props) {
     });
 
     setMenus((prev) => prev.filter((m) => getMenuId(m) !== id));
-    setCart((prev) => prev.filter((item) => item.menuId !== id));
+    setCart((prev) => prev.filter((i) => i.menuId !== id));
   };
 
   const pendingOrders = orders.filter((o) => o.status === "Pending");
@@ -152,18 +183,16 @@ export function RiceShop({ initialMenus, initialOrders }: Props) {
       <div className="flex gap-2 mb-4">
         <button
           onClick={() => setTab("order")}
-          className={`px-4 py-2 rounded ${
-            tab === "order" ? "bg-blue-600 text-white" : "bg-gray-200 text-black"
-          }`}
+          className={`px-4 py-2 rounded ${tab === "order" ? "bg-blue-600 text-white" : "bg-gray-200 text-black"
+            }`}
         >
           Order
         </button>
 
         <button
           onClick={() => setTab("orders")}
-          className={`px-4 py-2 rounded ${
-            tab === "orders" ? "bg-blue-600 text-white" : "bg-gray-200 text-black"
-          }`}
+          className={`px-4 py-2 rounded ${tab === "orders" ? "bg-blue-600 text-white" : "bg-gray-200 text-black"
+            }`}
         >
           Orders
         </button>
@@ -175,19 +204,19 @@ export function RiceShop({ initialMenus, initialOrders }: Props) {
 
           <div className="flex gap-2 mb-4">
             <input
-              type="text"
-              placeholder="Menu name"
               value={newMenuName}
               onChange={(e) => setNewMenuName(e.target.value)}
               className="border px-3 py-2 rounded"
+              placeholder="Menu name"
             />
+
             <input
-              type="number"
-              placeholder="Price"
               value={newMenuPrice}
               onChange={(e) => setNewMenuPrice(e.target.value)}
               className="border px-3 py-2 rounded w-24"
+              placeholder="Price"
             />
+
             <button
               onClick={addMenu}
               className="bg-green-600 text-white px-4 py-2 rounded"
@@ -197,35 +226,40 @@ export function RiceShop({ initialMenus, initialOrders }: Props) {
           </div>
 
           <table className="w-full border-collapse border mb-6">
-            <thead className="bg-gray-100 text-black">
-              <tr>
-                <th className="border p-2 text-left">Name</th>
-                <th className="border p-2 text-left">Price</th>
-                <th className="border p-2 text-left">Qty</th>
-                <th className="border p-2 text-left">Note</th>
-                <th className="border p-2 text-left">Action</th>
-              </tr>
-            </thead>
-
             <tbody>
               {menus.map((menu, idx) => {
-                const key = getMenuId(menu) || `menu-${idx}`;
+                const id = getMenuId(menu);
+                const key = id || `menu-${idx}`;
 
                 return (
                   <tr key={key}>
                     <td className="border p-2">{menu.name}</td>
-                    <td className="border p-2">{menu.price}</td>
+
+                    <td className="border p-2">
+                      <input
+                        type="number"
+                        value={editingPrice[id] ?? menu.price}
+                        onChange={(e) => {
+                          const v = Number(e.target.value);
+                          setEditingPrice((prev) => ({
+                            ...prev,
+                            [id]: Number.isNaN(v) ? 0 : v,
+                          }));
+                        }}
+                        className="border px-2 py-1 rounded w-20"
+                      />
+                    </td>
 
                     <td className="border p-2">
                       <input
                         type="number"
                         min="1"
-                        value={itemQty[key] || 1}
+                        value={itemQty[key] ?? 1}
                         onChange={(e) => {
-                          const value = parseInt(e.target.value);
+                          const v = Number(e.target.value);
                           setItemQty((prev) => ({
                             ...prev,
-                            [key]: isNaN(value) || value < 1 ? 1 : value,
+                            [key]: v > 0 ? v : 1,
                           }));
                         }}
                         className="border px-2 py-1 rounded w-16"
@@ -234,8 +268,7 @@ export function RiceShop({ initialMenus, initialOrders }: Props) {
 
                     <td className="border p-2">
                       <input
-                        type="text"
-                        value={itemNote[key] || ""}
+                        value={itemNote[key] ?? ""}
                         onChange={(e) =>
                           setItemNote((prev) => ({
                             ...prev,
@@ -253,6 +286,14 @@ export function RiceShop({ initialMenus, initialOrders }: Props) {
                       >
                         Add
                       </button>
+
+                      <button
+                        onClick={() => updateMenuPrice(menu)}
+                        className="bg-yellow-500 text-white px-3 py-1 rounded mr-2"
+                      >
+                        Save
+                      </button>
+
                       <button
                         onClick={() => deleteMenu(menu)}
                         className="bg-red-500 text-white px-3 py-1 rounded"
@@ -299,12 +340,12 @@ export function RiceShop({ initialMenus, initialOrders }: Props) {
 
               <div className="flex gap-2">
                 <input
-                  type="text"
-                  placeholder="Customer name"
                   value={customerName}
                   onChange={(e) => setCustomerName(e.target.value)}
                   className="border px-3 py-2 rounded"
+                  placeholder="Customer name"
                 />
+
                 <button
                   onClick={placeOrder}
                   className="bg-green-600 text-white px-4 py-2 rounded"
@@ -323,56 +364,89 @@ export function RiceShop({ initialMenus, initialOrders }: Props) {
             Pending Orders ({pendingOrders.length})
           </h2>
 
-          {pendingOrders.length === 0 ? (
-            <p className="text-gray-500 mb-6">No pending orders</p>
-          ) : (
-            <table className="w-full border-collapse border mb-6">
-              <tbody>
-                {pendingOrders.map((order) => {
-                  const id = getId(order);
+          <table className="w-full border-collapse border mb-6">
+            <tbody>
+              {pendingOrders.map((order) => {
+                const id = getId(order);
 
-                  return (
-                    <tr key={id}>
-                      <td className="border p-2">
-                        {order.customerName || "Guest"}
-                      </td>
-                      <td className="border p-2">{order.totalPrice}</td>
-                      <td className="border p-2">
-                        <button
-                          onClick={() => completeOrder(order)}
-                          className="bg-green-500 text-white px-3 py-1 rounded mr-2"
-                        >
-                          Complete
-                        </button>
-                       
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          )}
+                return (
+                  <tr key={id}>
+                    <td className="border p-2">
+                      {order.customerName || "Guest"}
+                    </td>
+                    <td className="border p-2">
+                      <div className="space-y-1">
+                        {order.items.map((item: any, idx: number) => (
+                          <div key={idx} className="text-sm">
+                            {item.name} x{item.qty} @ {item.pricePerItem} ={" "}
+                            {item.qty * item.pricePerItem}
+                            {item.note && (
+                              <span className="text-gray-500">
+                                {" "}
+                                ({item.note})
+                              </span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </td>
+
+                    <td className="border p-2">{order.totalPrice}</td>
+
+                    <td className="border p-2">
+                      <button
+                        onClick={() => completeOrder(order)}
+                        className="bg-green-500 text-white px-3 py-1 rounded mr-2"
+                      >
+                        Complete
+                      </button>
+
+                      <button
+                        onClick={() => cancelOrder(order)}
+                        className="bg-red-500 text-white px-3 py-1 rounded"
+                      >
+                        Cancel
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
 
           <h2 className="text-xl font-semibold mb-3">
             Completed Orders ({completedOrders.length})
           </h2>
 
-          {completedOrders.length === 0 ? (
-            <p className="text-gray-500">No completed orders</p>
-          ) : (
-            <table className="w-full border-collapse border">
-              <tbody>
-                {completedOrders.map((order) => (
-                  <tr key={getId(order)}>
-                    <td className="border p-2">
-                      {order.customerName || "Guest"}
-                    </td>
-                    <td className="border p-2">{order.totalPrice}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+          <table className="w-full border-collapse border">
+            <tbody>
+              {completedOrders.map((order) => (
+                <tr key={getId(order)}>
+                  <td className="border p-2">
+                    {order.customerName || "Guest"}
+                  </td>
+                  <td className="border p-2">
+                    <div className="space-y-1">
+                      {order.items.map((item: any, idx: number) => (
+                        <div key={idx} className="text-sm">
+                          {item.name} x{item.qty} @ {item.pricePerItem} ={" "}
+                          {item.qty * item.pricePerItem}
+                          {item.note && (
+                            <span className="text-gray-500">
+                              {" "}
+                              ({item.note})
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </td>
+
+                  <td className="border p-2">{order.totalPrice}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
     </div>
