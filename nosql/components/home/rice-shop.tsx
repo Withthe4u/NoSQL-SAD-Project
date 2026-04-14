@@ -119,7 +119,6 @@ export function RiceShop({ initialMenus, initialOrders }: Props) {
 
   const addMenu = async () => {
     if (!newMenuName || !newMenuPrice) return;
-
     const res = await fetch("/api/menu", {
       method: "POST",
       headers: { "Content-Type": "application/json" },

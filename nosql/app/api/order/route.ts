@@ -7,8 +7,10 @@ import {
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET() {
+      console.log("STEP 1: API route hit");
   try {
     const orders = await getActiveOrdersRepo();
+    console.log("STEP 4: Sending response to client");
     return NextResponse.json(orders, { status: 200 });
   } catch (error : any) {
     console.log(error.issues);
