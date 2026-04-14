@@ -1,7 +1,6 @@
-  import { OrderCollection } from "@/db/schema";
-  import { CreateOrder, Order } from "../models";
-  import connectMongoDB from "@/db";
-
+import { OrderCollection } from "@/db/schema";
+import { CreateOrder, Order } from "../models";
+import connectMongoDB from "@/db";
 
 export async function getActiveOrdersRepo(): Promise<Order[]> {
   console.log("STEP 2: connect to MongoDB with mongoose");
